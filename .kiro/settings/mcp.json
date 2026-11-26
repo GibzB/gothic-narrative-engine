@@ -1,0 +1,23 @@
+{
+  "mcpServers": {
+    "skillforge-core-engine": {
+      "command": "node",
+      "args": [
+        "${WORKSPACE_ROOT}/packages/skillforge-core/dist/mcp-server/index.js"
+      ],
+      "env": {
+        "NODE_ENV": "development",
+        "SKILLFORGE_LOG_LEVEL": "info"
+      },
+      "disabled": false
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ],
+      "disabled": false
+    }
+  }
+}

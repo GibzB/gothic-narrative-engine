@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://kiro.dev/skills/demo-skill/schema.json",
+  "title": "Demo Skill Parameters",
+  "description": "JSON Schema for the demo-skill parameters, demonstrating Draft-07 compliance and comprehensive constraint definitions.",
+  "type": "object",
+  "properties": {
+    "action": {
+      "type": "string",
+      "enum": ["validate", "test", "compile"],
+      "description": "The action to perform with this skill."
+    },
+    "target": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500,
+      "pattern": "^[a-zA-Z0-9_./-]+$",
+      "description": "The target file or resource to operate on. Must be a valid path string."
+    },
+    "verbose": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether to output verbose logging."
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100,
+      "default": 10,
+      "description": "Number of iterations or items to process."
+    },
+    "options": {
+      "type": "object",
+      "properties": {
+        "dryRun": {
+          "type": "boolean",
+          "default": false,
+          "description": "Preview changes without applying them."
+        },
+        "outputFormat": {
+          "type": "string",
+          "enum": ["json", "yaml", "text"],
+          "default": "json",
+          "description": "Output format for results."
+        },
+        "includeWarnings": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include warnings in output."
+        }
+      },
+      "additionalProperties": false
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 50
+      },
+      "minItems": 0,
+      "maxItems": 10,
+      "uniqueItems": true,
+      "description": "Optional tags for categorizing the operation."
+    }
+  },
+  "required": ["action", "target"],
+  "additionalProperties": false
+}

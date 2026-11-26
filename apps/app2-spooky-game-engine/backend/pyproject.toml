@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gothic-narrative-engine"
+version = "0.1.0"
+description = "Spooky Gothic Narrative Engine - Interactive web application with branching horror stories"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [
+    {name = "Kiro-SkillForge Team"}
+]
+keywords = ["kiro", "narrative", "game-engine", "gothic", "horror"]
+
+dependencies = [
+    "fastapi>=0.109.0",
+    "uvicorn[standard]>=0.27.0",
+    "pyyaml>=6.0",
+    "skillforge-core",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "httpx>=0.26.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["gothic_narrative*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"

@@ -1,0 +1,40 @@
+{
+  "name": "@kiro-skillforge/app2-spooky-game-engine",
+  "version": "0.1.0",
+  "description": "Spooky Gothic Narrative Engine - Interactive web application with branching horror stories",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist/"
+  },
+  "dependencies": {
+    "@kiro-skillforge/core": "*",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "three": "^0.169.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.13.9",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@types/three": "^0.169.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.5",
+    "typescript": "^5.6.3"
+  },
+  "keywords": [
+    "kiro",
+    "narrative",
+    "game-engine",
+    "gothic",
+    "webgl"
+  ],
+  "license": "MIT"
+}

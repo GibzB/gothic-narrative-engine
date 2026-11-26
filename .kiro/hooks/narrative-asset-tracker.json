@@ -1,0 +1,17 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "narrative-asset-tracker",
+      "description": "Tracks and validates narrative asset changes (stories, scenes, characters, items, skills).",
+      "trigger": "PostFileSave",
+      "matcher": "(stories|scenes|characters|items|skills)/.*\\.(json|md)$",
+      "action": {
+        "type": "command",
+        "command": "python3 -c \"import sys, json; ctx = json.load(sys.stdin); print(f'[Asset Tracker] Processed: {ctx.get(\\\"file_path\\\", \\\"unknown\\\")}')\""
+      },
+      "timeout": 30,
+      "enabled": true
+    }
+  ]
+}

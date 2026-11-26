@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cloud-compliance-auditor"
+version = "0.1.0"
+description = "Enterprise Cloud Compliance Auditor - CLI tool for IaC scanning and CIS benchmark validation"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [
+    {name = "Kiro-SkillForge Team"}
+]
+keywords = ["kiro", "compliance", "security", "iac", "cis-benchmark", "aws"]
+
+dependencies = [
+    "click>=8.1.0",
+    "pyyaml>=6.0",
+    "rich>=13.0.0",
+    "skillforge-core",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=4.1.0",
+    "mypy>=1.8.0",
+]
+
+[project.scripts]
+compliance-auditor = "cloud_compliance.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["cloud_compliance*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]

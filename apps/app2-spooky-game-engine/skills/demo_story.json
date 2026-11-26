@@ -1,0 +1,136 @@
+{
+  "title": "The Haunting of Blackwood Manor",
+  "description": "A gothic horror story where you explore a haunted manor",
+  "scenes": {
+    "entrance": {
+      "title": "The Entrance",
+      "description": "You stand before a crumbling manor, its windows like hollow eyes staring into the void. The iron gates creak ominously in the cold wind. A sense of dread washes over you.",
+      "mood": "foreboding",
+      "choices": [
+        {"id": "enter", "text": "Push open the gates and enter", "consequence": "courtyard"},
+        {"id": "wait", "text": "Wait and observe from a distance", "consequence": "observation"}
+      ]
+    },
+    "courtyard": {
+      "title": "The Courtyard",
+      "description": "The gates groan as you push them open. A path of broken stones leads to the manor entrance. Mist swirls around your feet. You hear whispers in the wind.",
+      "mood": "mystery",
+      "choices": [
+        {"id": "door", "text": "Approach the front door", "consequence": "lobby"},
+        {"id": "window", "text": "Peek through a dusty window", "consequence": "glimpse"}
+      ]
+    },
+    "observation": {
+      "title": "Watching from Afar",
+      "description": "You wait in the shadows. Minutes pass. Then you see it - a figure moving past an upper window. Someone... or something... is inside.",
+      "mood": "suspense",
+      "choices": [
+        {"id": "enter", "text": "Now is the time - approach the gates", "consequence": "courtyard"},
+        {"id": "flee", "text": "This was a mistake - turn back", "consequence": "ending_flee"}
+      ]
+    },
+    "lobby": {
+      "title": "The Grand Lobby",
+      "description": "The front door creaks open. Dust motes dance in the pale moonlight. A grand staircase rises before you, and corridors stretch into darkness on either side.",
+      "mood": "dread",
+      "choices": [
+        {"id": "upstairs", "text": "Ascend the staircase", "consequence": "upstairs"},
+        {"id": "basement", "text": "Explore the basement door", "consequence": "basement"}
+      ]
+    },
+    "glimpse": {
+      "title": "A Glimpse Within",
+      "description": "Through the grime-covered window, you see a figure seated in a chair - motionless. Is it a statue? A corpse? Or something worse?",
+      "mood": "horror",
+      "choices": [
+        {"id": "enter", "text": "Find a way inside", "consequence": "lobby"},
+        {"id": "run", "text": "Run away!", "consequence": "ending_flee"}
+      ]
+    },
+    "upstairs": {
+      "title": "The Upper Floor",
+      "description": "The staircase creaks beneath your feet. At the top, a long corridor stretches before you. Doors line both sides, and at the far end, a pale light flickers.",
+      "mood": "suspense",
+      "choices": [
+        {"id": "light", "text": "Follow the flickering light", "consequence": "finale"},
+        {"id": "door", "text": "Open the nearest door", "consequence": "bedroom"}
+      ]
+    },
+    "basement": {
+      "title": "The Basement",
+      "description": "The basement door groans open. Cold, damp air rushes up to meet you. Stone steps descend into pitch darkness. You hear dripping water... and something else.",
+      "mood": "terror",
+      "choices": [
+        {"id": "descend", "text": "Descend into the darkness", "consequence": "crypt"},
+        {"id": "retreat", "text": "Close the door and retreat", "consequence": "lobby"}
+      ]
+    },
+    "bedroom": {
+      "title": "The Master Bedroom",
+      "description": "A four-poster bed dominates the room. On it lies a figure - preserved as if sleeping. As you approach, its eyes snap open.",
+      "mood": "horror",
+      "choices": [
+        {"id": "fight", "text": "Stand your ground", "consequence": "ending_fight"},
+        {"id": "flee", "text": "Run for your life!", "consequence": "ending_escape"}
+      ]
+    },
+    "crypt": {
+      "title": "The Crypt",
+      "description": "Ancient coffins line the walls. In the center, an altar glows with an unholy light. You've found the heart of the manor's curse.",
+      "mood": "terror",
+      "choices": [
+        {"id": "destroy", "text": "Destroy the altar", "consequence": "ending_victory"},
+        {"id": "leave", "text": "This is beyond you - flee", "consequence": "ending_escape"}
+      ]
+    },
+    "finale": {
+      "title": "The Final Chamber",
+      "description": "You enter a room filled with candles. A figure in white stands at the window. She turns, her face both beautiful and terrible. 'You've come at last,' she whispers.",
+      "mood": "melancholy",
+      "choices": [
+        {"id": "accept", "text": "Accept her invitation", "consequence": "ending_embrace"},
+        {"id": "reject", "text": "Reject and flee", "consequence": "ending_escape"}
+      ]
+    },
+    "ending_flee": {
+      "title": "THE END - Flight",
+      "description": "You turn and flee. The manor's secrets remain hidden, but you live to see another day. Perhaps some doors are better left unopened...",
+      "mood": "melancholy",
+      "isEnding": true,
+      "endingType": "neutral",
+      "choices": []
+    },
+    "ending_fight": {
+      "title": "THE END - Confrontation",
+      "description": "You stand your ground as the figure rises. In that moment of terror, you find courage you never knew. The creature recoils from your defiance and retreats into shadow. You survive.",
+      "mood": "hope",
+      "isEnding": true,
+      "endingType": "good",
+      "choices": []
+    },
+    "ending_escape": {
+      "title": "THE END - Escape",
+      "description": "You flee through the manor, bursting through doors and windows until you reach the outside. Behind you, the manor stands silent once more. You escaped... this time.",
+      "mood": "suspense",
+      "isEnding": true,
+      "endingType": "neutral",
+      "choices": []
+    },
+    "ending_victory": {
+      "title": "THE END - Victory",
+      "description": "You smash the altar. A scream echoes through the manor as the curse is broken. Light floods the basement. You have freed Blackwood Manor from its dark past.",
+      "mood": "hope",
+      "isEnding": true,
+      "endingType": "best",
+      "choices": []
+    },
+    "ending_embrace": {
+      "title": "THE END - Embrace",
+      "description": "You take her hand. The candles flicker and go out. When morning comes, you are gone - but you are not alone. You have become part of Blackwood's eternal story.",
+      "mood": "melancholy",
+      "isEnding": true,
+      "endingType": "dark",
+      "choices": []
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "SkillForge Session Context Injector",
+      "description": "Injects workspace steering rules and active test requirements when a Kiro session starts.",
+      "trigger": "SessionStart",
+      "matcher": ".*",
+      "timeout": 5,
+      "enabled": true,
+      "action": {
+        "type": "agent",
+        "prompt": "Load workspace steering rules from .kiro/steering/ and apply them to this session. Enforce strict Python type hints and property-based testing with Hypothesis."
+      }
+    }
+  ]
+}

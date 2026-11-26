@@ -1,0 +1,766 @@
+"""
+Narrative Engine - Branching horror stories with skill-compiled logic.
+
+Implements a state-machine based narrative engine where story progression
+is governed by compiled skills and validated state transitions.
+
+Task 4.4: Implement Narrative Engine
+Validates: Requirements 4.1, 4.2, 4.3
+"""
+
+from __future__ import annotations
+
+import json
+import random
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from pathlib import Path
+from typing import Any, Generator
+
+
+class StoryPhase(str, Enum):
+    """Phases of a gothic horror story."""
+    INTRODUCTION = "introduction"
+    EXPLORATION = "exploration"
+    DISCOVERY = "discovery"
+    TENSION = "tension"
+    CLIMAX = "climax"
+    RESOLUTION = "resolution"
+    EPILOGUE = "epilogue"
+
+
+class Mood(str, Enum):
+    """Atmospheric moods for scenes."""
+    FOREBODING = "foreboding"
+    DREAD = "dread"
+    SUSPENSE = "suspense"
+    HORROR = "horror"
+    MYSTERY = "mystery"
+    MELANCHOLY = "melancholy"
+    HOPE = "hope"
+    TERROR = "terror"
+
+
+@dataclass
+class StoryChoice:
+    """A choice presented to the player."""
+
+    id: str
+    text: str
+    consequence_scene: str
+    requirement: dict[str, Any] | None = None  # Items, stats, or flags needed
+    effect: dict[str, Any] | None = None  # Changes to player state
+    is_visible: bool = True
+    is_available: bool = True
+    hint: str = ""
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dictionary."""
+        return {
+            "id": self.id,
+            "text": self.text,
+            "consequenceScene": self.consequence_scene,
+            "requirement": self.requirement,
+            "effect": self.effect,
+            "isVisible": self.is_visible,
+            "isAvailable": self.is_available,
+            "hint": self.hint,
+        }
+
+
+@dataclass
+class StoryScene:
+    """A scene in the narrative."""
+
+    id: str
+    title: str
+    description: str
+    phase: StoryPhase = StoryPhase.EXPLORATION
+    mood: Mood = Mood.FOREBODING
+    choices: list[StoryChoice] = field(default_factory=list)
+    atmosphere: dict[str, Any] = field(default_factory=dict)
+    items: list[str] = field(default_factory=list)
+    events: list[str] = field(default_factory=list)
+    is_ending: bool = False
+    ending_type: str | None = None  # "good", "bad", "neutral", "secret"
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dictionary."""
+        return {
+            "id": self.id,
+            "title": self.title,
+            "description": self.description,
+            "phase": self.phase.value,
+            "mood": self.mood.value,
+            "choices": [c.to_dict() for c in self.choices if c.is_visible],
+            "atmosphere": self.atmosphere,
+            "items": self.items,
+            "events": self.events,
+            "isEnding": self.is_ending,
+            "endingType": self.ending_type,
+        }
+
+
+@dataclass
+class PlayerState:
+    """The player's current state in the narrative."""
+
+    current_scene: str = "start"
+    visited_scenes: list[str] = field(default_factory=list)
+    inventory: list[str] = field(default_factory=list)
+    flags: dict[str, bool] = field(default_factory=dict)
+    stats: dict[str, int] = field(default_factory=lambda: {
+        "sanity": 100,
+        "courage": 50,
+        "knowledge": 0,
+        "suspicion": 0,
+    })
+    choices_made: list[str] = field(default_factory=list)
+    time_in_story: int = 0  # Narrative time units
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dictionary."""
+        return {
+            "currentScene": self.current_scene,
+            "visitedScenes": self.visited_scenes,
+            "inventory": self.inventory,
+            "flags": self.flags,
+            "stats": self.stats,
+            "choicesMade": self.choices_made,
+            "timeInStory": self.time_in_story,
+        }
+
+    def can_afford(self, cost: dict[str, int]) -> bool:
+        """Check if player has enough stats."""
+        for stat, amount in cost.items():
+            if self.stats.get(stat, 0) < amount:
+                return False
+        return True
+
+    def has_item(self, item: str) -> bool:
+        """Check if player has an item."""
+        return item in self.inventory
+
+    def has_flag(self, flag: str) -> bool:
+        """Check if player has a flag set."""
+        return self.flags.get(flag, False)
+
+
+@dataclass
+class NarrativeState:
+    """Complete state of the narrative engine."""
+
+    player: PlayerState = field(default_factory=PlayerState)
+    world_flags: dict[str, bool] = field(default_factory=dict)
+    npcs: dict[str, dict[str, Any]] = field(default_factory=dict)
+    active_events: list[str] = field(default_factory=list)
+    scene_history: list[dict[str, Any]] = field(default_factory=list)
+    turn_count: int = 0
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dictionary."""
+        return {
+            "player": self.player.to_dict(),
+            "worldFlags": self.world_flags,
+            "npcs": self.npcs,
+            "activeEvents": self.active_events,
+            "sceneHistory": self.scene_history,
+            "turnCount": self.turn_count,
+        }
+
+
+class NarrativeEngine:
+    """
+    Core narrative engine for branching horror stories.
+
+    Manages story state, processes choices, and generates narrative content.
+    Uses compiled skills for story logic validation.
+
+    Task 4.4: Narrative Engine
+    Validates: Requirements 4.1, 4.2, 4.3
+
+    Example:
+        >>> engine = NarrativeEngine()
+        >>> engine.load_story(story_data)
+        >>> scene = engine.get_current_scene()
+        >>> engine.make_choice("enter_front")
+    """
+
+    def __init__(
+        self,
+        *,
+        random_seed: int | None = None,
+        validate_transitions: bool = True,
+    ) -> None:
+        """
+        Initialize the narrative engine.
+
+        Args:
+            random_seed: Seed for reproducible random events
+            validate_transitions: Whether to validate state transitions
+        """
+        self._random = random.Random(random_seed)
+        self.validate_transitions = validate_transitions
+        self._scenes: dict[str, StoryScene] = {}
+        self._state = NarrativeState()
+        self._story_metadata: dict[str, Any] = {}
+
+    @property
+    def current_scene(self) -> StoryScene | None:
+        """Get the current scene."""
+        return self._scenes.get(self._state.player.current_scene)
+
+    @property
+    def player_state(self) -> PlayerState:
+        """Get the player state."""
+        return self._state.player
+
+    def load_story(self, story_data: dict[str, Any]) -> None:
+        """
+        Load a story from dictionary data.
+
+        Args:
+            story_data: Story definition with scenes and metadata
+        """
+        self._story_metadata = story_data.get("metadata", {})
+
+        # Load scenes
+        for scene_id, scene_data in story_data.get("scenes", {}).items():
+            scene = self._parse_scene(scene_id, scene_data)
+            self._scenes[scene_id] = scene
+
+    def load_story_from_file(self, path: Path | str) -> None:
+        """
+        Load a story from a JSON file.
+
+        Args:
+            path: Path to story JSON file
+        """
+        path = Path(path)
+        data = json.loads(path.read_text())
+        self.load_story(data)
+
+    def _parse_scene(self, scene_id: str, data: dict[str, Any]) -> StoryScene:
+        """Parse a scene from dictionary data."""
+        choices = []
+        for choice_data in data.get("choices", []):
+            choice = StoryChoice(
+                id=choice_data.get("id", f"choice_{len(choices)}"),
+                text=choice_data.get("text", "???"),
+                consequence_scene=choice_data.get("consequence", scene_id),
+                requirement=choice_data.get("requirement"),
+                effect=choice_data.get("effect"),
+                is_visible=choice_data.get("isVisible", True),
+                hint=choice_data.get("hint", ""),
+            )
+            choices.append(choice)
+
+        phase = StoryPhase(data.get("phase", "exploration"))
+        mood = Mood(data.get("mood", "foreboding"))
+
+        return StoryScene(
+            id=scene_id,
+            title=data.get("title", "Untitled Scene"),
+            description=data.get("description", ""),
+            phase=phase,
+            mood=mood,
+            choices=choices,
+            atmosphere=data.get("atmosphere", {}),
+            items=data.get("items", []),
+            events=data.get("events", []),
+            is_ending=data.get("isEnding", False),
+            ending_type=data.get("endingType"),
+        )
+
+    def start_story(self, start_scene: str = "start") -> StoryScene:
+        """
+        Start the narrative from a scene.
+
+        Args:
+            start_scene: Starting scene ID
+
+        Returns:
+            The starting scene
+        """
+        self._state = NarrativeState()
+        self._state.player.current_scene = start_scene
+        self._state.player.visited_scenes.append(start_scene)
+
+        return self.current_scene
+
+    def get_current_scene(self) -> StoryScene | None:
+        """Get the current scene."""
+        return self.current_scene
+
+    def get_available_choices(self) -> list[StoryChoice]:
+        """
+        Get choices available to the player.
+
+        Filters choices based on requirements and visibility.
+
+        Returns:
+            List of available choices
+        """
+        scene = self.current_scene
+        if not scene:
+            return []
+
+        available = []
+        for choice in scene.choices:
+            if not choice.is_visible:
+                continue
+
+            # Check requirements
+            if choice.requirement:
+                available_flag = True
+
+                # Check items
+                items_needed = choice.requirement.get("items", [])
+                for item in items_needed:
+                    if not self._state.player.has_item(item):
+                        available_flag = False
+                        break
+
+                # Check flags
+                flags_needed = choice.requirement.get("flags", [])
+                for flag in flags_needed:
+                    if not self._state.player.has_flag(flag):
+                        available_flag = False
+                        break
+
+                # Check stats
+                stats_needed = choice.requirement.get("stats", {})
+                if not self._state.player.can_afford(stats_needed):
+                    available_flag = False
+
+                choice.is_available = available_flag
+
+            available.append(choice)
+
+        return available
+
+    def make_choice(self, choice_id: str) -> dict[str, Any]:
+        """
+        Make a choice and progress the story.
+
+        Args:
+            choice_id: ID of the choice to make
+
+        Returns:
+            Result with new scene and effects
+        """
+        scene = self.current_scene
+        if not scene:
+            return {"error": "No current scene"}
+
+        # Find the choice
+        choice = None
+        for c in scene.choices:
+            if c.id == choice_id:
+                choice = c
+                break
+
+        if not choice:
+            return {"error": f"Choice '{choice_id}' not found"}
+
+        if not choice.is_available:
+            return {"error": f"Choice '{choice_id}' is not available"}
+
+        # Record choice
+        self._state.player.choices_made.append(choice_id)
+        self._state.turn_count += 1
+
+        # Apply effects
+        effects_applied = []
+        if choice.effect:
+            effects_applied = self._apply_effects(choice.effect)
+
+        # Transition to new scene
+        old_scene = self._state.player.current_scene
+        new_scene_id = choice.consequence_scene
+
+        # Record history
+        self._state.scene_history.append({
+            "from": old_scene,
+            "to": new_scene_id,
+            "choice": choice_id,
+            "turn": self._state.turn_count,
+        })
+
+        # Update state
+        self._state.player.current_scene = new_scene_id
+        self._state.player.time_in_story += 1
+
+        if new_scene_id not in self._state.player.visited_scenes:
+            self._state.player.visited_scenes.append(new_scene_id)
+
+        new_scene = self._scenes.get(new_scene_id)
+
+        return {
+            "success": True,
+            "previousScene": old_scene,
+            "currentScene": new_scene_id,
+            "scene": new_scene.to_dict() if new_scene else None,
+            "effects": effects_applied,
+            "playerState": self._state.player.to_dict(),
+        }
+
+    def _apply_effects(self, effects: dict[str, Any]) -> list[str]:
+        """
+        Apply effects from a choice.
+
+        Args:
+            effects: Effects to apply
+
+        Returns:
+            List of applied effects descriptions
+        """
+        applied = []
+
+        # Add items
+        for item in effects.get("addItems", []):
+            if item not in self._state.player.inventory:
+                self._state.player.inventory.append(item)
+                applied.append(f"Acquired: {item}")
+
+        # Remove items
+        for item in effects.get("removeItems", []):
+            if item in self._state.player.inventory:
+                self._state.player.inventory.remove(item)
+                applied.append(f"Lost: {item}")
+
+        # Set flags
+        for flag, value in effects.get("setFlags", {}).items():
+            self._state.player.flags[flag] = value
+            applied.append(f"Flag set: {flag}={value}")
+
+        # Modify stats
+        for stat, change in effects.get("modifyStats", {}).items():
+            current = self._state.player.stats.get(stat, 0)
+            self._state.player.stats[stat] = max(0, min(100, current + change))
+            applied.append(f"{stat}: {current} -> {self._state.player.stats[stat]}")
+
+        # Set world flags
+        for flag, value in effects.get("worldFlags", {}).items():
+            self._state.world_flags[flag] = value
+
+        return applied
+
+    def get_story_state(self) -> dict[str, Any]:
+        """Get the complete story state."""
+        return {
+            "metadata": self._story_metadata,
+            "state": self._state.to_dict(),
+            "currentScene": self.current_scene.to_dict() if self.current_scene else None,
+            "visitedScenes": len(self._state.player.visited_scenes),
+            "totalScenes": len(self._scenes),
+            "turnCount": self._state.turn_count,
+        }
+
+    def is_story_complete(self) -> bool:
+        """Check if the story has reached an ending."""
+        scene = self.current_scene
+        return scene.is_ending if scene else False
+
+    def get_ending(self) -> dict[str, Any] | None:
+        """Get ending information if story is complete."""
+        if not self.is_story_complete():
+            return None
+
+        scene = self.current_scene
+        return {
+            "sceneId": scene.id,
+            "title": scene.title,
+            "endingType": scene.ending_type,
+            "description": scene.description,
+            "stats": self._state.player.stats,
+            "choicesMade": len(self._state.player.choices_made),
+            "scenesVisited": len(self._state.player.visited_scenes),
+        }
+
+    def generate_procedural_event(self, event_type: str) -> dict[str, Any]:
+        """
+        Generate a procedural narrative event.
+
+        Args:
+            event_type: Type of event to generate
+
+        Returns:
+            Generated event data
+        """
+        events = {
+            "whisper": {
+                "text": "A whisper echoes from the shadows...",
+                "mood": Mood.DREAD,
+                "effects": {"modifyStats": {"sanity": -5}},
+            },
+            "footsteps": {
+                "text": "You hear footsteps behind you...",
+                "mood": Mood.SUSPENSE,
+                "effects": {"modifyStats": {"suspicion": 10}},
+            },
+            "cold_wind": {
+                "text": "A cold wind blows through the corridor...",
+                "mood": Mood.FOREBODING,
+                "effects": {},
+            },
+            "flickering_light": {
+                "text": "The candles flicker ominously...",
+                "mood": Mood.MYSTERY,
+                "effects": {},
+            },
+            "distant_scream": {
+                "text": "A distant scream pierces the silence...",
+                "mood": Mood.TERROR,
+                "effects": {"modifyStats": {"sanity": -10, "courage": -5}},
+            },
+        }
+
+        event = events.get(event_type)
+        if not event:
+            event = self._random.choice(list(events.values()))
+
+        # Apply effects
+        if event.get("effects"):
+            self._apply_effects(event["effects"])
+
+        return {
+            "type": event_type,
+            "text": event["text"],
+            "mood": event["mood"].value if isinstance(event["mood"], Mood) else event["mood"],
+        }
+
+
+def create_demo_story() -> dict[str, Any]:
+    """Create a demo gothic horror story."""
+    return {
+        "metadata": {
+            "title": "The Haunted Manor",
+            "author": "Kiro-SkillForge",
+            "description": "A gothic horror narrative",
+            "version": "1.0.0",
+        },
+        "scenes": {
+            "start": {
+                "id": "start",
+                "title": "The Manor Gates",
+                "description": """The iron gates creak open of their own accord, revealing a gravel path winding through mist-shrouded trees. The manor looms ahead, its windows dark save for a single flickering candle in an upper window.
+
+You feel a chill run down your spine as you step onto the grounds. Something watches from the shadows.""",
+                "phase": "introduction",
+                "mood": "foreboding",
+                "atmosphere": {
+                    "fog": 0.8,
+                    "lightning": False,
+                    "sound": "distant_thunder",
+                },
+                "choices": [
+                    {
+                        "id": "enter_front",
+                        "text": "Approach the front door",
+                        "consequence": "foyer",
+                    },
+                    {
+                        "id": "explore_grounds",
+                        "text": "Explore the grounds first",
+                        "consequence": "garden",
+                    },
+                    {
+                        "id": "call_out",
+                        "text": "Call out to whoever lit the candle",
+                        "consequence": "no_response",
+                    },
+                ],
+            },
+            "foyer": {
+                "id": "foyer",
+                "title": "The Foyer",
+                "description": """The massive oak door swings open at your touch. Inside, dust motes dance in the dim light filtering through stained glass windows. A grand staircase rises to darkness above, and passages lead left and right.
+
+A portrait on the wall seems to follow you with its eyes.""",
+                "phase": "exploration",
+                "mood": "mystery",
+                "atmosphere": {
+                    "fog": 0.3,
+                    "lightning": True,
+                    "sound": "creaking",
+                },
+                "choices": [
+                    {
+                        "id": "upstairs",
+                        "text": "Ascend the staircase",
+                        "consequence": "upstairs_hall",
+                    },
+                    {
+                        "id": "left",
+                        "text": "Take the left passage",
+                        "consequence": "library",
+                    },
+                    {
+                        "id": "right",
+                        "text": "Take the right passage",
+                        "consequence": "dining_room",
+                    },
+                ],
+            },
+            "garden": {
+                "id": "garden",
+                "title": "The Overgrown Garden",
+                "description": """The garden has run wild. Thorny vines choke what were once carefully tended flower beds, and a dried fountain stands as a monument to forgotten elegance.
+
+You notice fresh footprints in the mud leading toward a garden shed.""",
+                "phase": "exploration",
+                "mood": "melancholy",
+                "atmosphere": {
+                    "fog": 0.6,
+                    "lightning": False,
+                    "sound": "wind_leaves",
+                },
+                "items": ["rusty_key"],
+                "choices": [
+                    {
+                        "id": "follow_tracks",
+                        "text": "Follow the footprints to the shed",
+                        "consequence": "shed",
+                    },
+                    {
+                        "id": "return_gates",
+                        "text": "Return to the gates",
+                        "consequence": "start",
+                    },
+                ],
+            },
+            "no_response": {
+                "id": "no_response",
+                "title": "Silence",
+                "description": """Your voice echoes across the grounds, but no answer comes. The candle in the upper window flickers once more, then goes dark.
+
+You feel utterly alone... yet the sensation of being watched only grows stronger.""",
+                "phase": "exploration",
+                "mood": "dread",
+                "atmosphere": {
+                    "fog": 0.9,
+                    "lightning": True,
+                    "sound": "silence",
+                },
+                "choices": [
+                    {
+                        "id": "proceed_anyway",
+                        "text": "Proceed toward the manor",
+                        "consequence": "start",
+                    },
+                ],
+            },
+            "library": {
+                "id": "library",
+                "title": "The Dusty Library",
+                "description": """Shelves of ancient books line the walls, their leather bindings cracked with age. A single armchair sits before a cold fireplace, and a desk is covered in yellowed papers.
+
+One book lies open on the desk, as if someone was reading it moments ago.""",
+                "phase": "discovery",
+                "mood": "mystery",
+                "items": ["ancient_tome"],
+                "choices": [
+                    {
+                        "id": "read_book",
+                        "text": "Read the open book",
+                        "consequence": "read_tome",
+                        "effect": {"modifyStats": {"knowledge": 10, "sanity": -5}},
+                    },
+                    {
+                        "id": "search_shelves",
+                        "text": "Search the bookshelves",
+                        "consequence": "find_journal",
+                    },
+                    {
+                        "id": "return_foyer",
+                        "text": "Return to the foyer",
+                        "consequence": "foyer",
+                    },
+                ],
+            },
+            "upstairs_hall": {
+                "id": "upstairs_hall",
+                "title": "The Upper Hall",
+                "description": """The upstairs hallway stretches into darkness. Doors line both sides, some slightly ajar. At the far end, you can make out a door with light seeping from underneath.
+
+A child's laughter echoes from somewhere nearby.""",
+                "phase": "tension",
+                "mood": "suspense",
+                "choices": [
+                    {
+                        "id": "light_door",
+                        "text": "Approach the door with light",
+                        "consequence": "candle_room",
+                    },
+                    {
+                        "id": "open_nearest",
+                        "text": "Open the nearest door",
+                        "consequence": "bedroom",
+                    },
+                    {
+                        "id": "follow_laughter",
+                        "text": "Follow the laughter",
+                        "consequence": "nursery",
+                    },
+                ],
+            },
+            "dining_room": {
+                "id": "dining_room",
+                "title": "The Dining Room",
+                "description": """A long table fills the room, set for a feast that never came. Silver candlesticks hold melted tapers, and crystal goblets reflect the dim light.
+
+At the head of the table, a single plate has been cleared clean, the chair pushed back as if someone just left.""",
+                "phase": "discovery",
+                "mood": "dread",
+                "items": ["silver_knife"],
+                "choices": [
+                    {
+                        "id": "investigate_plate",
+                        "text": "Investigate the cleared plate",
+                        "consequence": "dining_clue",
+                    },
+                    {
+                        "id": "take_knife",
+                        "text": "Take the silver knife",
+                        "consequence": "dining_room",
+                        "effect": {"addItems": ["silver_knife"]},
+                    },
+                    {
+                        "id": "return_foyer",
+                        "text": "Return to the foyer",
+                        "consequence": "foyer",
+                    },
+                ],
+            },
+            "ending_escape": {
+                "id": "ending_escape",
+                "title": "Escape",
+                "description": """You burst through the manor doors into the night. Behind you, the windows flicker with ghostly light. The gates slam shut of their own accord, but you're already past them.
+
+As you flee down the road, you glance back once. In the upper window, a candle flickers. Then all is dark.
+
+You escaped... but the manor's secrets remain.""",
+                "phase": "resolution",
+                "mood": "hope",
+                "isEnding": True,
+                "endingType": "neutral",
+                "choices": [],
+            },
+            "ending_truth": {
+                "id": "ending_truth",
+                "title": "The Truth",
+                "description": """You finally understand. The manor was never haunted by ghosts—it was haunted by memories. Your memories.
+
+As the truth floods back, the shadows dissolve. The candle in the window was always your own. You never left this place... because you never truly arrived.
+
+The manor is your prison, and your salvation.""",
+                "phase": "resolution",
+                "mood": "melancholy",
+                "isEnding": True,
+                "endingType": "secret",
+                "choices": [],
+            },
+        },
+    }

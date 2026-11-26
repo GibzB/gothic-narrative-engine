@@ -1,0 +1,512 @@
+/*
+ * Gothic Narrative Engine - Dark Mode Gothic Styles
+ * 
+ * Atmospheric dark-mode styling for the gothic horror narrative UI.
+ * Task 4.2: UI Layer - Dark-mode Gothic React UI
+ */
+
+/* CSS Variables for Gothic Theme */
+:root {
+  /* Primary Colors */
+  --gothic-black: #0a0a0a;
+  --gothic-charcoal: #1a1a1a;
+  --gothic-dark-gray: #2a2a2a;
+  --gothic-gray: #3a3a3a;
+  --gothic-silver: #8a8a8a;
+  --gothic-pale: #c0c0c0;
+  --gothic-white: #f0f0f0;
+
+  /* Accent Colors */
+  --gothic-blood: #8b0000;
+  --gothic-crimson: #dc143c;
+  --gothic-gold: #d4af37;
+  --gothic-purple: #4a0e4e;
+  --gothic-mist: #778899;
+
+  /* Atmospheric Colors */
+  --gothic-shadow: rgba(0, 0, 0, 0.8);
+  --gothic-fog: rgba(119, 136, 153, 0.3);
+  --gothic-candle: rgba(255, 200, 100, 0.8);
+
+  /* Typography */
+  --font-display: 'Cinzel', 'Times New Roman', serif;
+  --font-body: 'Crimson Text', 'Georgia', serif;
+  --font-mono: 'Fira Code', 'Courier New', monospace;
+
+  /* Spacing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 2rem;
+  --spacing-xl: 4rem;
+
+  /* Transitions */
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.4s ease;
+  --transition-slow: 0.8s ease;
+}
+
+/* Base Styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--gothic-black);
+  color: var(--gothic-pale);
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Container */
+.gothic-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--spacing-lg);
+  position: relative;
+  z-index: 1;
+}
+
+/* Typography */
+.gothic-title {
+  font-family: var(--font-display);
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--gothic-white);
+  text-shadow: 
+    0 0 10px var(--gothic-shadow),
+    0 0 20px var(--gothic-shadow),
+    2px 2px 0 var(--gothic-blood);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: var(--spacing-lg);
+}
+
+.gothic-subtitle {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: var(--gothic-silver);
+  letter-spacing: 0.05em;
+  margin-bottom: var(--spacing-md);
+}
+
+.gothic-text {
+  font-family: var(--font-body);
+  font-size: 1.125rem;
+  line-height: 1.8;
+  color: var(--gothic-pale);
+}
+
+/* Story Panel */
+.story-panel {
+  background: linear-gradient(
+    180deg,
+    var(--gothic-charcoal) 0%,
+    var(--gothic-black) 100%
+  );
+  border: 1px solid var(--gothic-gray);
+  border-radius: 4px;
+  padding: var(--spacing-xl);
+  position: relative;
+  overflow: hidden;
+}
+
+.story-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--gothic-blood),
+    var(--gothic-crimson),
+    var(--gothic-blood),
+    transparent
+  );
+}
+
+/* Scene Display */
+.scene-title {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  color: var(--gothic-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  margin-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--gothic-gray);
+  padding-bottom: var(--spacing-sm);
+}
+
+.scene-description {
+  font-family: var(--font-body);
+  font-size: 1.25rem;
+  line-height: 2;
+  color: var(--gothic-pale);
+  white-space: pre-wrap;
+  margin-bottom: var(--spacing-xl);
+  position: relative;
+  text-shadow: 0 0 5px var(--gothic-shadow);
+}
+
+/* Choice Buttons */
+.choices-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-xl);
+}
+
+.choice-button {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--gothic-silver);
+  background: transparent;
+  border: 1px solid var(--gothic-gray);
+  padding: var(--spacing-md) var(--spacing-lg);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+  text-align: left;
+}
+
+.choice-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--gothic-fog),
+    transparent
+  );
+  transition: left var(--transition-slow);
+}
+
+.choice-button:hover {
+  color: var(--gothic-white);
+  border-color: var(--gothic-blood);
+  background: rgba(139, 0, 0, 0.2);
+  transform: translateX(10px);
+  box-shadow: 
+    0 0 10px rgba(139, 0, 0, 0.5),
+    inset 0 0 10px rgba(139, 0, 0, 0.1);
+}
+
+.choice-button:hover::before {
+  left: 100%;
+}
+
+.choice-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  border-color: var(--gothic-dark-gray);
+}
+
+.choice-button:disabled:hover {
+  transform: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* Stats Panel */
+.stats-panel {
+  position: fixed;
+  top: var(--spacing-lg);
+  right: var(--spacing-lg);
+  background: rgba(26, 26, 26, 0.9);
+  border: 1px solid var(--gothic-gray);
+  border-radius: 4px;
+  padding: var(--spacing-md);
+  min-width: 200px;
+  backdrop-filter: blur(10px);
+  z-index: 100;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-xs) 0;
+  border-bottom: 1px solid var(--gothic-dark-gray);
+}
+
+.stat-item:last-child {
+  border-bottom: none;
+}
+
+.stat-label {
+  font-family: var(--font-display);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--gothic-silver);
+}
+
+.stat-value {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  color: var(--gothic-gold);
+}
+
+.stat-bar {
+  width: 100%;
+  height: 4px;
+  background: var(--gothic-dark-gray);
+  border-radius: 2px;
+  margin-top: var(--spacing-xs);
+  overflow: hidden;
+}
+
+.stat-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gothic-blood), var(--gothic-crimson));
+  transition: width var(--transition-normal);
+}
+
+/* Inventory */
+.inventory-panel {
+  position: fixed;
+  bottom: var(--spacing-lg);
+  left: var(--spacing-lg);
+  background: rgba(26, 26, 26, 0.9);
+  border: 1px solid var(--gothic-gray);
+  border-radius: 4px;
+  padding: var(--spacing-md);
+  min-width: 150px;
+  backdrop-filter: blur(10px);
+  z-index: 100;
+}
+
+.inventory-title {
+  font-family: var(--font-display);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--gothic-silver);
+  margin-bottom: var(--spacing-sm);
+}
+
+.inventory-item {
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  color: var(--gothic-pale);
+  padding: var(--spacing-xs) 0;
+  border-bottom: 1px solid var(--gothic-dark-gray);
+}
+
+.inventory-item:last-child {
+  border-bottom: none;
+}
+
+/* Atmospheric Effects */
+.fog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 0%,
+    rgba(10, 10, 10, 0.5) 50%,
+    rgba(10, 10, 10, 0.8) 100%
+  );
+  z-index: 0;
+  animation: fog-pulse 10s ease-in-out infinite;
+}
+
+@keyframes fog-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 0.9; }
+}
+
+.vignette {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 150px rgba(0, 0, 0, 0.9);
+  z-index: 0;
+}
+
+/* WebGL Canvas */
+.webgl-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  opacity: 0.7;
+}
+
+/* Loading States */
+.loading-text {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--gothic-silver);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* Ending Screen */
+.ending-panel {
+  text-align: center;
+  padding: var(--spacing-xl);
+}
+
+.ending-type {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: 2px;
+  display: inline-block;
+  margin-bottom: var(--spacing-lg);
+}
+
+.ending-type.good {
+  background: rgba(212, 175, 55, 0.2);
+  color: var(--gothic-gold);
+  border: 1px solid var(--gothic-gold);
+}
+
+.ending-type.bad {
+  background: rgba(139, 0, 0, 0.2);
+  color: var(--gothic-crimson);
+  border: 1px solid var(--gothic-blood);
+}
+
+.ending-type.neutral {
+  background: rgba(119, 136, 153, 0.2);
+  color: var(--gothic-mist);
+  border: 1px solid var(--gothic-mist);
+}
+
+.ending-type.secret {
+  background: rgba(74, 14, 78, 0.2);
+  color: var(--gothic-purple);
+  border: 1px solid var(--gothic-purple);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  :root {
+    font-size: 14px;
+  }
+
+  .gothic-title {
+    font-size: 2rem;
+  }
+
+  .stats-panel,
+  .inventory-panel {
+    position: relative;
+    top: auto;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    margin: var(--spacing-md) 0;
+    width: 100%;
+  }
+
+  .story-panel {
+    padding: var(--spacing-lg);
+  }
+}
+
+/* Animations */
+.fade-in {
+  animation: fadeIn var(--transition-slow) ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.typewriter {
+  overflow: hidden;
+  border-right: 2px solid var(--gothic-pale);
+  white-space: nowrap;
+  animation: 
+    typing 3.5s steps(40, end),
+    blink-caret 0.75s step-end infinite;
+}
+
+@keyframes typing {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+@keyframes blink-caret {
+  from, to { border-color: transparent; }
+  50% { border-color: var(--gothic-pale); }
+}
+
+/* Flickering Candle Effect */
+.candle-flicker {
+  animation: flicker 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes flicker {
+  0% { opacity: 0.8; }
+  25% { opacity: 1; }
+  50% { opacity: 0.7; }
+  75% { opacity: 0.9; }
+  100% { opacity: 0.85; }
+}
+
+/* Lightning Flash */
+.lightning-flash {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.1);
+  pointer-events: none;
+  opacity: 0;
+  z-index: 1000;
+}
+
+.lightning-flash.active {
+  animation: lightning 0.2s ease-out;
+}
+
+@keyframes lightning {
+  0% { opacity: 0; }
+  10% { opacity: 0.8; }
+  20% { opacity: 0; }
+  30% { opacity: 0.6; }
+  100% { opacity: 0; }
+}

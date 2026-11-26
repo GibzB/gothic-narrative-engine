@@ -1,0 +1,17 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "pre-tool-security-gate",
+      "description": "Blocks destructive shell or AWS deletion commands before execution.",
+      "trigger": "PreToolUse",
+      "matcher": "shell",
+      "action": {
+        "type": "command",
+        "command": "python3 -c \"import sys, json; ctx = json.load(sys.stdin); cmd = str(ctx.get(\\\"tool_input\\\", {}).get(\\\"command\\\", \\\"\\\")); blocked = [\\\"rm -rf /\\\", \\\"aws s3 rm\\\", \\\"terraform destroy\\\", \\\"DROP DATABASE\\\"]; hits = [b for b in blocked if b.lower() in cmd.lower()]; sys.stderr.write(f\\\"BLOCKED BY SECURITY GATE: {hits}\\\\n\\\") if hits else None; sys.exit(2 if hits else 0)\""
+      },
+      "timeout": 10,
+      "enabled": true
+    }
+  ]
+}

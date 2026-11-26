@@ -1,0 +1,43 @@
+{
+  "name": "kiro-skillforge",
+  "version": "0.1.0",
+  "description": "Autonomous AI skill compiler, spec-driven evaluation harness, and governance platform for AWS Kiro developers",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces",
+    "lint": "npm run lint --workspaces",
+    "clean": "npm run clean --workspaces",
+    "typecheck": "npm run typecheck --workspaces",
+    "doctor": "python3 scripts/skillforge_doctor.py"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.9",
+    "typescript": "^5.6.3",
+    "prettier": "^3.4.2",
+    "eslint": "^9.18.0"
+  },
+  "keywords": [
+    "kiro",
+    "skill",
+    "compiler",
+    "pbt",
+    "property-based-testing",
+    "mcp",
+    "model-context-protocol",
+    "aws"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gibzb/kiro-skillforge"
+  }
+}
